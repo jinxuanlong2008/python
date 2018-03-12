@@ -1,0 +1,98 @@
+timeout = 1
+
+getdir MACRO_DIR
+LOG_DIR = MACRO_DIR
+
+getdate TIME "_%y%m%d-%H%M%S"
+
+
+;ログイン
+username = 'root'
+password = 'abcd!'
+enaPass =  password
+sleepTime = 1
+
+
+
+;========================================
+;  ESC
+;========================================
+
+username = 'admin'
+password = 'abcd'
+enaPass =  password
+sleepTime = 1
+
+;esc1
+hostname = 'host1234'
+ip = '192.168.10.100'
+call login
+
+
+end
+
+
+;========================================
+;  関数名：login
+;  機能：
+;    対象のホストにログインし、vmstatを実施し続ける
+;========================================
+
+:login
+
+    ; 文字列変数「ssh」にログインに必要な情報を入力する
+    ; 事前に入力が必要な変数（ip、username、password）
+    ssh = ip 
+    strconcat ssh ':22 /ssh /auth=password /user='
+    strconcat ssh username
+    strconcat ssh ' /passwd='
+    strconcat ssh password
+    
+    
+    ; ログイン
+    connect ssh
+    
+    ; 文字列変数「ssh」にログインに必要な情報を入力する
+    ; 事前に入力が必要な変数（ip、username、password）
+    LOG_FILE_NAME = LOG_DIR
+    strconcat LOG_FILE_NAME "\Log\"
+    strconcat LOG_FILE_NAME "vmstat_"
+    strconcat LOG_FILE_NAME hostname
+    strconcat LOG_FILE_NAME TIME
+    strconcat LOG_FILE_NAME ".log"
+    
+    loginfo DefLog
+    if result == -1 then
+     logopen LOG_FILE_NAME 0 1 0 1
+    else
+     logclose
+     logopen LOG_FILE_NAME 0 1 0 1
+    endif
+    
+    pause sleepTime
+    
+    tmp_str = "scp -p ~/vmstat_* "
+    strconcat tmp_str OSS_USERNAME
+    strconcat tmp_str "@"
+    strconcat tmp_str OSS_IP
+    strconcat tmp_str ":"
+    strconcat tmp_str OSS_LOG_DIR
+    sendln ""
+    sendln ""
+    sendln ""
+    sendln tmp_str
+    wait 'password'
+    sendln OSS_PASSWORD
+    wait '#'
+    
+    pause 10
+    
+    sendln 'exit'
+    pause 1
+;    sendln 'exit'
+    
+;    unlink
+    
+return
+
+
